@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import { Box, Avatar, TextField, Typography, Stack } from "@mui/material";
@@ -14,6 +14,7 @@ const ChatScreen = () => {
   const { id, name } = useParams();
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
+  const inputRef = useRef(null);
 
   //  Get All messages by particular user
   const { data, loading, error } = useQuery(GET_ALL_MESSAGES, {
@@ -21,28 +22,24 @@ const ChatScreen = () => {
       receiverId: +id,
     },
     onCompleted(data) {
-      console.log(data.messagesByUser);
+      // console.log(data.messagesByUser);
       setMessages(data.messagesByUser);
     },
   });
 
-  
-
   const [sendMessage] = useMutation(SEND_MSG, {
-    onCompleted(data) {
-      console.log(data);
-      setMessages((prevMessages) => [...prevMessages, data.createMessage]);
-    },
+    // onCompleted(data) {
+    //   console.log(data);
+    //   setMessages((prevMessages) => [...prevMessages, data.createMessage]);
+    // },
   });
 
   const { data: subData } = useSubscription(MSG_SUB, {
     onSubscriptionData({ subscriptionData: { data } }) {
+      console.log(data);
       setMessages((prevMessages) => [...prevMessages, data.messageAdded]);
     },
   });
-  if (subData) {
-    console.log(subData);
-  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -96,14 +93,16 @@ const ChatScreen = () => {
           sx={{ padding: "10px" }}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          ref={inputRef}
         />
 
         <SendIcon
           fontSize="large"
           sx={{ cursor: "pointer" }}
-          onClick={() =>
-            sendMessage({ variables: { receiverId: +id, text: text } })
-          }
+          onClick={() => {
+            inputRef.current.value = "";
+            sendMessage({ variables: { receiverId: +id, text: text } });
+          }}
         />
       </Stack>
     </Box>
